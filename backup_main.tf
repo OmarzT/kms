@@ -4,7 +4,7 @@ resource "aws_kms_key" "backupvault_main" {
   key_usage               = "ENCRYPT_DECRYPT"
   enable_key_rotation     = false
   deletion_window_in_days = var.deletion_window_in_days
-  policy                  = data.aws_iam_policy_document.backupvault_main[count.index].rendered
+  policy                  = data.aws_iam_policy_document.backupvault_main[count.index].json
 }
 
 resource "aws_kms_alias" "backupvault_main" {
@@ -25,7 +25,6 @@ data "aws_iam_policy_document" "backupvault_main" {
       type        = "AWS"
     }
   }
-
   statement {
     sid       = "Allow access from Backup account to copy backups"
     effect    = "Allow"
@@ -42,8 +41,7 @@ data "aws_iam_policy_document" "backupvault_main" {
     condition {
       test     = "StringEquals"
       variable = "aws:PrincipalOrgID"
-      values   = data.aws_organizations_organization.current.id
+      values   = [data.aws_organizations_organization.current.id]
     }    
   }
-
 }

@@ -25,7 +25,6 @@ data "aws_iam_policy_document" "backupvault" {
       type        = "AWS"
     }
   }
-
   statement {
     sid       = "Allow access from Backup account to copy backups"
     effect    = "Allow"
@@ -45,5 +44,4 @@ data "aws_iam_policy_document" "backupvault" {
       values   = formatlist("arn:aws:iam::%s:root", var.backup_account_id)
     }    
   }
-
 }
