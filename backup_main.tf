@@ -4,7 +4,7 @@ resource "aws_kms_key" "backupvault_main" {
   key_usage               = "ENCRYPT_DECRYPT"
   enable_key_rotation     = false
   deletion_window_in_days = var.deletion_window_in_days
-  policy                  = data.template_file.backupvault_main[count.index].rendered
+  policy                  = data.aws_iam_policy_document.backupvault_main[count.index].rendered
 }
 
 resource "aws_kms_alias" "backupvault_main" {
@@ -13,13 +13,37 @@ resource "aws_kms_alias" "backupvault_main" {
   target_key_id = join("", aws_kms_key.backupvault_main.*.id)
 }
 
-data "template_file" "backupvault_main" {
-  count    = var.enable_backupvault_main_key ? 1 : 0
-  template = file("${path.module}/policies/kms_backupvault_main.json.tpl")
-  vars = {
-    awsorgid     = jsonencode(data.aws_organizations_organization.current.id)
-    live_account = jsonencode(local.src_list)
+data "aws_iam_policy_document" "backupvault_main" {
+  count         = var.enable_backupvault_main_key ? 1 : 0  
+  statement {
+    sid       = "Enable IAM User Permissions"
+    effect    = "Allow"
+    resources = ["*"]
+    actions = [ "kms:*", ]
+    principals {
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+      type        = "AWS"
+    }
   }
+
+  statement {
+    sid       = "Allow access from Backup account to copy backups"
+    effect    = "Allow"
+    actions   = [ "kms:CreateGrant",
+                  "kms:Decrypt",
+                  "kms:GenerateDataKey*",
+                  "kms:DescribeKey"
+                ]
+    resources = ["*"]
+    principals {
+      identifiers = formatlist("arn:aws:iam::%s:root", var.backup_account_id)
+      type        = "AWS"
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "aws:PrincipalOrgID"
+      values   = data.aws_organizations_organization.current.id
+    }    
+  }
+
 }
-
-
