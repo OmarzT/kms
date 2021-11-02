@@ -20,7 +20,7 @@ variable "enable_backupvault_main_key" {
 
 variable "backup_account_id" {
   description = "trip-domain-backup-prd account"
-  default     = "662733315436"
+  default     = "188485717084"
 }
 
 variable "deletion_window_in_days" {

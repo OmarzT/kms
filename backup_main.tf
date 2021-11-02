@@ -14,34 +14,34 @@ resource "aws_kms_alias" "backupvault_main" {
 }
 
 data "aws_iam_policy_document" "backupvault_main" {
-  count         = var.enable_backupvault_main_key ? 1 : 0  
+  count = var.enable_backupvault_main_key ? 1 : 0
   statement {
     sid       = "Enable IAM User Permissions"
     effect    = "Allow"
     resources = ["*"]
-    actions = [ "kms:*", ]
+    actions   = ["kms:*", ]
     principals {
       identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
       type        = "AWS"
     }
   }
   statement {
-    sid       = "Allow access from Backup account to copy backups"
-    effect    = "Allow"
-    actions   = [ "kms:CreateGrant",
-                  "kms:Decrypt",
-                  "kms:GenerateDataKey*",
-                  "kms:DescribeKey"
-                ]
+    sid    = "Allow access from Backup account to copy backups"
+    effect = "Allow"
+    actions = ["kms:CreateGrant",
+      "kms:Decrypt",
+      "kms:GenerateDataKey*",
+      "kms:DescribeKey"
+    ]
     resources = ["*"]
     principals {
-      identifiers = formatlist("arn:aws:iam::%s:root", var.backup_account_id)
+      identifiers = "*"
       type        = "AWS"
     }
     condition {
       test     = "StringEquals"
       variable = "aws:PrincipalOrgID"
       values   = [data.aws_organizations_organization.current.id]
-    }    
+    }
   }
 }
